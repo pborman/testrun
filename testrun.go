@@ -93,6 +93,7 @@ var flags = &struct {
 	Force    bool          `getopt:"-f --force force removal of DIR"`
 	Timeout  time.Duration `getopt:"--timeout=DURATION maximum time to run a single test"`
 	Killout  time.Duration `getopt:"--killout=DURATION time to wait between kill signals"`
+	Bench    string        `getopt:"--bench=PATTERN pass --test.bench=PATTERN to the test program"`
 
 	Debug bool `getopt:"--debug used when debugging testrun"`
 }{
@@ -392,6 +393,14 @@ func Main() int {
 	getopt.SetParameters("[PACKAGE] [ARGS...]")
 	getopt.SetUsage(usage)
 	args := options.RegisterAndParse(flags)
+	if flags.Dir != "" {
+		dir, err := filepath.Abs(flags.Dir)
+		if err != nil {
+			fmt.Println(err)
+			return 1
+		}
+		flags.Dir = dir
+	}
 	if flags.Max <= 0 {
 		fmt.Fprintln(os.Stderr, "--max must be postiive")
 		return 1
@@ -418,6 +427,12 @@ func Main() int {
 		usage()
 		return 1
 	}
+/*
+	if flags.Bench != "" {
+		args = append([]string{"--test.bench=" + flags.Bench}, args...)
+		fmt.Printf("Args: %q\n", args)
+	}
+*/
 
 	// killTests is used to kill off the remaining tests when we
 	// decide to stop testing due to an interrupt or the duration
