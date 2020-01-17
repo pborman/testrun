@@ -421,18 +421,16 @@ func Main() int {
 		os.Stdout.Write(b.Stdout)
 		os.Stderr.Write(b.Stderr)
 		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
 			return 1
 		}
 	} else {
 		usage()
 		return 1
 	}
-/*
 	if flags.Bench != "" {
 		args = append([]string{"--test.bench=" + flags.Bench}, args...)
-		fmt.Printf("Args: %q\n", args)
 	}
-*/
 
 	// killTests is used to kill off the remaining tests when we
 	// decide to stop testing due to an interrupt or the duration
@@ -511,7 +509,7 @@ func Main() int {
 
 	sigch := make(chan os.Signal, 2)
 	if !flags.Debug {
-		signal.Notify(sigch)
+		signal.Notify(sigch, syscall.SIGINT)
 	}
 
 	// Before we exit we need to kill off any stragling tests that are
@@ -575,6 +573,14 @@ Loop:
 					break Loop
 				}
 			default:
+				if flags.Bench != "" {
+					if len(bytes.TrimSpace(r.Stdout)) > 0 {
+						fmt.Printf("Stdout:\n%s\n", indent.Bytes(prefix, r.Stdout))
+					}
+					if len(bytes.TrimSpace(r.Stderr)) > 0 {
+						fmt.Printf("Stderr:\n%s\n", indent.Bytes(prefix, r.Stderr))
+					}
+				} 
 				passed++
 			}
 		}
